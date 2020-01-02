@@ -1,7 +1,14 @@
+# jetbrains
 .idea
+
+# saseul
 saseuld.pid
 debug.log
 saseul-env.json
 blockdata
 contractdata
 tmp
+
+data/*
+
+!.gitkeep

@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  memcached:
+    image: memcached:alpine
+    networks:
+      - back
+  mongo:
+    image: mongo:4.2
+    ports:
+      - 27017:27017
+    networks:
+      - back
+    volumes:
+      - ./data/db:/data/db
+  node:
+    build:
+      context: .
+      dockerfile: node.dockerfile
+    image: saseul-origin-node
+    networks:
+      - back
+      - front
+    depends_on:
+      - memcached
+      - mongo
+    volumes:
+      - .:/app/saseul
+      - ./data/logs:/var/log/saseul
+    environment:
+      WAIT_HOSTS: memcached:11211, mongo:27017
+      _: /usr/local/bin/php
+  api:
+    build:
+      context: .
+      dockerfile: api.dockerfile
+    image: saseul-origin-api
+    networks:
+      - back
+      - front
+    depends_on:
+      - memcached
+      - mongo
+      - node
+    volumes:
+      - .:/app/saseul
+      - ./data/logs:/var/log/saseul
+    environment:
+      _: /usr/local/bin/php
+  web:
+    image: nginx:alpine
+    networks:
+      - front
+    depends_on:
+      - api
+    ports:
+      - 80:80
+    volumes:
+      - ./docker/conf/saseul.conf:/etc/nginx/conf.d/default.conf
+      - .:/app/saseul
+
+networks:
+  front:
+  back:
